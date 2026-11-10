@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Data Analyst</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f4f5f6;
+            color: #333;
+        }
+
+        /* Left Pane: Files & Chat */
+        .left-pane {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .header h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            color: #1a73e8;
+        }
+
+        .file-upload-box {
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px dashed #dadce0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .file-upload-box:hover {
+            border-color: #1a73e8;
+        }
+
+        .file-info {
+            font-size: 0.9rem;
+            color: #5f6368;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fafafa;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .message.user {
+            background-color: #1a73e8;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            background-color: #f1f3f4;
+            color: #202124;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.bot.clickable {
+            cursor: pointer;
+        }
+
+        .message.bot.clickable:hover {
+            background-color: #e8eaed;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .new-chat-btn {
+            padding: 6px 12px;
+            background: #ffffff;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .new-chat-btn:hover {
+            background: #e8f0fe;
+        }
+
+        .message.error {
+            background-color: #fce8e6;
+            color: #c5221f;
+            align-self: flex-start;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            background: #ffffff;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .input-area input:focus {
+            border-color: #1a73e8;
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: #1557b0;
+        }
+
+        /* Right Pane: Results */
+        .right-pane {
+            width: 50%;
+            padding: 30px;
+            box-sizing: border-box;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .results-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .results-placeholder {
+            text-align: center;
+            color: #80868b;
+            font-size: 1.1rem;
+        }
+
+        .results-card h3 {
+            margin-top: 0;
+            color: #202124;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e8eaed;
+            padding-bottom: 10px;
+        }
+
+        .code-container {
+            background: #202124;
+            color: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .answer-container {
+            font-size: 1.1rem;
+            color: #202124;
+            line-height: 1.5;
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .raw-result-container {
+            margin-top: 10px;
+            overflow-x: auto;
+            max-height: 250px;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 12px;
+            font-family: monospace;
+        }
+
+        .raw-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .raw-table th,
+        .raw-table td {
+            border: 1px solid #dadce0;
+            padding: 8px 12px;
+        }
+
+        .raw-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #202124;
+        }
+
+        .raw-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #202124;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Left Pane: Input/Upload & History -->
+    <div class="left-pane">
+        <div class="header">
+            <div class="header-row">
+                <h2>AI Data Analyst</h2>
+                <button class="new-chat-btn" onclick="newChat()">New chat</button>
+            </div>
+            <div class="file-upload-box" onclick="document.getElementById('csvFile').click()">
+                <span id="uploadPrompt">Click to Upload CSV File</span>
+                <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="handleFileChange(this)">
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+        </div>
+
+        <div class="chat-history" id="chatHistory">
+            <div class="message bot">Hello! Upload a CSV file and ask me anything about your data.</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="question" placeholder="e.g., What is the average sales amount?"
+                onkeydown="if(event.key === 'Enter') analyzeData()">
+            <button onclick="analyzeData()">Send</button>
+        </div>
+    </div>
+
+    <!-- Right Pane: Analysis Details -->
+    <div class="right-pane" id="rightPane">
+        <div class="results-placeholder" id="placeholder">
+            <h3>Analysis Output</h3>
+            <p>Upload a file, ask a question, and the step-by-step code execution will appear here.</p>
+        </div>
+        <div class="results-card" id="resultsCard">
+            <h3>Analysis Results</h3>
+            <strong>Generated Pandas Expression:</strong>
+            <div class="code-container">
+                <code id="generatedCode"></code>
+            </div>
+
+            <strong>Raw Execution Output:</strong>
+            <div class="raw-result-container" id="rawResult"></div>
+            <br>
+
+            <strong>Final Answer:</strong>
+            <div class="answer-container" id="friendlyAnswer"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let turns = [];   // saved turns for this session (question, answer, code, raw_result)
+        const WELCOME = "Hello! Upload a CSV file and ask me anything about your data.";
+
+        function showDetails(turn) {
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('generatedCode').innerText = turn.code;
+            document.getElementById('rawResult').innerHTML = turn.raw_result;
+            document.getElementById('friendlyAnswer').innerText = turn.answer;
+        }
+
+        function renderTurn(turn) {
+            appendMessage(turn.question, 'user');
+            const index = turns.length;
+            turns.push(turn);
+            appendMessage(turn.answer, 'bot', index);
+        }
+
+        // Restore the saved conversation when the page is (re)loaded
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                if (!data.turns || data.turns.length === 0) return;
+                document.getElementById('chatHistory').innerHTML = '';
+                turns = [];
+                appendMessage(WELCOME, 'bot');
+                data.turns.forEach(renderTurn);
+                showDetails(turns[turns.length - 1]);
+                appendMessage(`Restored ${turns.length} earlier message(s) about ${data.file_name || 'your dataset'}. Re-upload the same CSV to keep asking follow-up questions.`, 'bot');
+            } catch (err) {
+                // History is a convenience; ignore failures.
+            }
+        }
+
+        async function newChat() {
+            try { await fetch('/clear', { method: 'POST' }); } catch (err) { }
+            turns = [];
+            document.getElementById('chatHistory').innerHTML = '';
+            appendMessage(WELCOME, 'bot');
+            document.getElementById('resultsCard').style.display = 'none';
+            document.getElementById('placeholder').style.display = 'block';
+        }
+
+        window.addEventListener('DOMContentLoaded', loadHistory);
+
+        function handleFileChange(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                document.getElementById('uploadPrompt').innerText = "Change CSV File";
+                document.getElementById('fileInfo').innerText = `Selected: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`;
+
+                // Add system message to chat
+                appendMessage(`Uploaded file: ${selectedFile.name}`, 'bot');
+            }
+        }
+
+        function appendMessage(text, sender, turnIndex) {
+            const chatHistory = document.getElementById('chatHistory');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerText = text;
+            if (turnIndex !== undefined) {
+                msgDiv.classList.add('clickable');
+                msgDiv.title = 'Click to see the code and raw result for this answer';
+                msgDiv.onclick = () => showDetails(turns[turnIndex]);
+            }
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function analyzeData() {
+            const questionInput = document.getElementById('question');
+            const question = questionInput.value.trim();
+
+            if (!selectedFile) {
+                alert("Please upload a CSV file first.");
+                return;
+            }
+            if (!question) {
+                return;
+            }
+
+            // Append user question to chat
+            appendMessage(question, 'user');
+            questionInput.value = '';
+
+            // Show loading in chat
+            const loadingId = 'loading-' + Date.now();
+            const chatHistory = document.getElementById('chatHistory');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot';
+            loadingDiv.id = loadingId;
+            loadingDiv.innerText = "Analyzing...";
+            chatHistory.appendChild(loadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('question', question);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                // Remove loading message
+                document.getElementById(loadingId).remove();
+
+                if (data.error) {
+                    appendMessage(`Error: ${data.error}`, 'error');
+                } else {
+                    if (data.history_reset) {
+                        appendMessage('New dataset detected, so earlier questions were cleared from context.', 'bot');
+                    }
+                    const turn = { question, answer: data.answer, code: data.code, raw_result: data.raw_result };
+                    const index = turns.length;
+                    turns.push(turn);
+
+                    // Append answer to chat history (click it later to re-open its details)
+                    appendMessage(data.answer, 'bot', index);
+
+                    // Show detailed results on the right
+                    showDetails(turn);
+                }
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                appendMessage("An error occurred connecting to the server.", 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
